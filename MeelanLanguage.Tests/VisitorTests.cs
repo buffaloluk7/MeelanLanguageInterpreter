@@ -287,7 +287,8 @@ namespace MeelanLanguage.Tests
         public void ItShallInterpretAFunctionCallWithTwoArguments()
         {
             // Given
-            const string funcDefProgramCode = "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
+            const string funcDefProgramCode =
+                "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
             var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
             const string funcCallProgramCode = "calculate(4, 5)";
             var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
@@ -305,7 +306,8 @@ namespace MeelanLanguage.Tests
         public void ItShallThrowAnInvalidOperationExceptionWhenTooLittleFunctionArgumentsAreProvided()
         {
             // Given
-            const string funcDefProgramCode = "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
+            const string funcDefProgramCode =
+                "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
             var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
             const string funcCallProgramCode = "calculate(4)";
             var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);

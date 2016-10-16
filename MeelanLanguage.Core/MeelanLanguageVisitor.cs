@@ -6,16 +6,16 @@ namespace MeelanLanguage.Core
 {
     public class MeelanLanguageVisitor : MeelanLanguageBaseVisitor<int>
     {
-        public IDictionary<string, MeelanLanguageParser.FuncDefContext> Functions { get; }
-        public IDictionary<string, int> Variables { get; }
-        public IDictionary<string, int> TemporaryVariables { get; }
-
         public MeelanLanguageVisitor()
         {
             Functions = new Dictionary<string, MeelanLanguageParser.FuncDefContext>();
             Variables = new Dictionary<string, int>();
             TemporaryVariables = new Dictionary<string, int>();
         }
+
+        public IDictionary<string, MeelanLanguageParser.FuncDefContext> Functions { get; }
+        public IDictionary<string, int> Variables { get; }
+        public IDictionary<string, int> TemporaryVariables { get; }
 
         public override int VisitPrint(MeelanLanguageParser.PrintContext context)
         {
@@ -170,7 +170,7 @@ namespace MeelanLanguage.Core
 
             return value*-1;
         }
-        
+
         public override int VisitTermInBraces(MeelanLanguageParser.TermInBracesContext context)
         {
             return Visit(context.expr());
@@ -214,7 +214,7 @@ namespace MeelanLanguage.Core
                 var argumentValue = Visit(argumentTerms[i]);
                 TemporaryVariables.Add(argumentName, argumentValue);
             }
-            
+
             var result = Visit(functionContext.statement());
 
             TemporaryVariables.Clear();

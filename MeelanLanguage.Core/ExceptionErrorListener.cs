@@ -10,7 +10,7 @@ namespace MeelanLanguage.Core
         {
             throw new InvalidOperationException($"Invalid Expression: {msg}", e);
         }
-        
+
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line,
             int charPositionInLine, string msg, RecognitionException e)
         {

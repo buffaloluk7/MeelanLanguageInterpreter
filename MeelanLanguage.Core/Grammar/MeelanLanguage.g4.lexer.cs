@@ -1,6 +1,6 @@
 ﻿namespace MeelanLanguage.Core.Grammar
 {
-    partial class MeelanLanguageLexer
+    public partial class MeelanLanguageLexer
     {
     }
 }
