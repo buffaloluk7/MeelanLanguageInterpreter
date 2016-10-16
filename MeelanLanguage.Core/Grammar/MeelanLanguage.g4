@@ -19,7 +19,8 @@ statement	: 'print' expr										# Print
 			| 'var' ID ('=' expr)?								# Declaration
 			| ID '=' expr										# Assignment
 			| 'while' expr 'do' statement						# While
-			| 'if' expr 'then' statement ('else' statement)?	# IfElse
+			| 'for' ID 'in' DOUBLE '...' DOUBLE statement		# ForIn
+			| 'if' expr 'then' statement ('else' statement)?	# IfOptionalElse
 			| 'funcdef' ID '(' idlist ')' statement				# FuncDef
 			//| '{' statements '}'								# Block --> term contains this rule (expr --> cmp --> ... --> term)
 			| expr												# Expression;
@@ -42,13 +43,14 @@ unary		: '-' unary											# UnaryTerm
 term		: '(' expr ')'										# TermInBraces
 			| ID												# VariableOnly
 			| ID '(' arglist ')'								# FuncCall
-			| INT												# NumberOnly
-			| '{' statements '}'								# Block;
+			| DOUBLE											# NumberOnly
+			| '{' statements '}'								# Block
+			| 'if' expr 'then' expr 'else' expr					# IfRequiredElse;
 
 /*
  * Lexer Rules
  */
 
 ID			: [a-zA-Z][a-zA-Z0-9_]*;
-INT			: [0-9]+;
+DOUBLE		: ([0-9]*[.])?[0-9]+;
 WS			: [ \t\r\n] -> channel(HIDDEN);

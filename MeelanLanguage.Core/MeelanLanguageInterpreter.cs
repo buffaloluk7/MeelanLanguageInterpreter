@@ -3,34 +3,29 @@ using MeelanLanguage.Core.Grammar;
 
 namespace MeelanLanguage.Core
 {
-    // https://github.com/tunnelvisionlabs/antlr4cs
-    // https://github.com/tunnelvisionlabs/antlr4cs/wiki
-    // file encoding! Unicode (UTF-8 without signature) - Codepage 65001
-    // see: https://github.com/ckuhn203/Antlr4Calculator/ for a good math calculator implementation
     public class MeelanLanguageInterpreter
     {
         private readonly MeelanLanguageVisitor _visitor = new MeelanLanguageVisitor();
 
-        public int InterpretProgramCodeFromFilePath(string filePath)
+        public double InterpretProgramCodeFromFilePath(string filePath)
         {
             var inputStream = new AntlrFileStream(filePath);
-            var parser = SetupParser(inputStream);
-            var result = InterpretProgram(parser);
+            var result = InterpretProgram(inputStream);
 
             return result;
         }
 
-        public int InterpretProgramCodeFromString(string programCode)
+        public double InterpretProgramCodeFromString(string programCode)
         {
             var inputStream = new AntlrInputStream(programCode);
-            var parser = SetupParser(inputStream);
-            var result = InterpretProgram(parser);
+            var result = InterpretProgram(inputStream);
 
             return result;
         }
 
-        private int InterpretProgram(MeelanLanguageParser parser)
+        private double InterpretProgram(ICharStream inputStream)
         {
+            var parser = SetupParser(inputStream);
             var statementsContext = parser.statements();
             var result = _visitor.Visit(statementsContext);
 

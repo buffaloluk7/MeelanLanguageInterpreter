@@ -147,6 +147,20 @@ namespace MeelanLanguage.Tests
         }
 
         [TestMethod]
+        public void ItShallInterpretAForInLoop()
+        {
+            // Given
+            const string programCode = "var sum = 0; for index in 1...10 { sum = sum + index }";
+            var statementsContext = GivenAnStatementsContext(programCode);
+
+            // When
+            _sut.Visit(statementsContext);
+
+            // Then
+            Assert.AreEqual(55, _sut.Variables["sum"]);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void ItShallThrowAnInvalidOperationExceptionWhenTryingToAccessAnUndeclaredVariable()
         {

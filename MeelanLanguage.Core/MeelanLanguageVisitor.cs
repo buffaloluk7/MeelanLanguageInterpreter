@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using MeelanLanguage.Core.Grammar;
 
 namespace MeelanLanguage.Core
 {
-    public class MeelanLanguageVisitor : MeelanLanguageBaseVisitor<int>
+    public class MeelanLanguageVisitor : MeelanLanguageBaseVisitor<double>
     {
         public MeelanLanguageVisitor()
         {
             Functions = new Dictionary<string, MeelanLanguageParser.FuncDefContext>();
-            Variables = new Dictionary<string, int>();
-            TemporaryVariables = new Dictionary<string, int>();
+            Variables = new Dictionary<string, double>();
+            TemporaryVariables = new Dictionary<string, double>();
         }
 
         public IDictionary<string, MeelanLanguageParser.FuncDefContext> Functions { get; }
-        public IDictionary<string, int> Variables { get; }
-        public IDictionary<string, int> TemporaryVariables { get; }
+        public IDictionary<string, double> Variables { get; }
+        public IDictionary<string, double> TemporaryVariables { get; }
 
-        public override int VisitPrint(MeelanLanguageParser.PrintContext context)
+        public override double VisitPrint(MeelanLanguageParser.PrintContext context)
         {
             var value = Visit(context.expr());
 
@@ -26,7 +27,7 @@ namespace MeelanLanguage.Core
             return value;
         }
 
-        public override int VisitDeclaration(MeelanLanguageParser.DeclarationContext context)
+        public override double VisitDeclaration(MeelanLanguageParser.DeclarationContext context)
         {
             var variableName = context.ID().GetText();
 
@@ -41,7 +42,7 @@ namespace MeelanLanguage.Core
             return variableValue;
         }
 
-        public override int VisitAssignment(MeelanLanguageParser.AssignmentContext context)
+        public override double VisitAssignment(MeelanLanguageParser.AssignmentContext context)
         {
             var variableName = context.ID().GetText();
             if (!Variables.ContainsKey(variableName))
@@ -55,17 +56,43 @@ namespace MeelanLanguage.Core
             return variableValue;
         }
 
-        public override int VisitWhile(MeelanLanguageParser.WhileContext context)
+        public override double VisitWhile(MeelanLanguageParser.WhileContext context)
         {
-            while (Visit(context.expr()) == 1)
-                Visit(context.statement());
+            var result = 0.0;
+            while (Math.Abs(Visit(context.expr()) - 1) < double.Epsilon)
+            {
+                result = Visit(context.statement());
+            }
 
-            return 0;
+            return result;
         }
 
-        public override int VisitIfElse(MeelanLanguageParser.IfElseContext context)
+        public override double VisitForIn(MeelanLanguageParser.ForInContext context)
         {
-            var expressionEqualsTrue = Visit(context.expr()) == 1;
+            var variableName = context.ID().GetText();
+            if (TemporaryVariables.ContainsKey(variableName) || Variables.ContainsKey(variableName))
+            {
+                throw new InvalidOperationException($"Variable {variableName} has already been declared.");
+            }
+
+            var fromValue = ConvertStringToDouble(context.DOUBLE(0).GetText());
+            var toValue = ConvertStringToDouble(context.DOUBLE(1).GetText());
+
+            var result = 0.0;
+
+            for (TemporaryVariables[variableName] = fromValue;
+                TemporaryVariables[variableName] <= toValue;
+                ++TemporaryVariables[variableName])
+            {
+                result = Visit(context.statement());
+            }
+
+            return result;
+        }
+
+        public override double VisitIfOptionalElse(MeelanLanguageParser.IfOptionalElseContext context)
+        {
+            var expressionEqualsTrue = Math.Abs(Visit(context.expr()) - 1) < double.Epsilon;
             if (expressionEqualsTrue)
             {
                 return Visit(context.statement(0));
@@ -79,7 +106,7 @@ namespace MeelanLanguage.Core
             return 0;
         }
 
-        public override int VisitFuncDef(MeelanLanguageParser.FuncDefContext context)
+        public override double VisitFuncDef(MeelanLanguageParser.FuncDefContext context)
         {
             var functionName = context.ID().GetText();
             if (Functions.ContainsKey(functionName))
@@ -92,7 +119,7 @@ namespace MeelanLanguage.Core
             return 0;
         }
 
-        public override int VisitCmp(MeelanLanguageParser.CmpContext context)
+        public override double VisitCmp(MeelanLanguageParser.CmpContext context)
         {
             var leftValue = Visit(context.sum(0));
             if (context.sum().Length == 1)
@@ -107,12 +134,12 @@ namespace MeelanLanguage.Core
             {
                 case "<":
                     return leftValue < rightValue ? 1 : 0;
-                case "=<": // ?
+                case "=<":
                     return leftValue <= rightValue ? 1 : 0;
                 case "==":
-                    return leftValue == rightValue ? 1 : 0;
+                    return Math.Abs(leftValue - rightValue) < double.Epsilon ? 1 : 0;
                 case "><":
-                    return leftValue != rightValue ? 1 : 0;
+                    return Math.Abs(leftValue - rightValue) > double.Epsilon ? 1 : 0;
                 case ">=":
                     return leftValue >= rightValue ? 1 : 0;
                 case ">":
@@ -122,7 +149,7 @@ namespace MeelanLanguage.Core
             }
         }
 
-        public override int VisitSum(MeelanLanguageParser.SumContext context)
+        public override double VisitSum(MeelanLanguageParser.SumContext context)
         {
             var leftValue = Visit(context.product(0));
             if (context.product().Length == 1)
@@ -144,7 +171,7 @@ namespace MeelanLanguage.Core
             }
         }
 
-        public override int VisitProduct(MeelanLanguageParser.ProductContext context)
+        public override double VisitProduct(MeelanLanguageParser.ProductContext context)
         {
             var leftValue = Visit(context.unary(0));
 
@@ -169,19 +196,19 @@ namespace MeelanLanguage.Core
             }
         }
 
-        public override int VisitUnaryTerm(MeelanLanguageParser.UnaryTermContext context)
+        public override double VisitUnaryTerm(MeelanLanguageParser.UnaryTermContext context)
         {
             var value = Visit(context.unary());
 
             return value*-1;
         }
 
-        public override int VisitTermInBraces(MeelanLanguageParser.TermInBracesContext context)
+        public override double VisitTermInBraces(MeelanLanguageParser.TermInBracesContext context)
         {
             return Visit(context.expr());
         }
 
-        public override int VisitVariableOnly(MeelanLanguageParser.VariableOnlyContext context)
+        public override double VisitVariableOnly(MeelanLanguageParser.VariableOnlyContext context)
         {
             var variableName = context.ID().GetText();
             if (TemporaryVariables.ContainsKey(variableName))
@@ -196,7 +223,7 @@ namespace MeelanLanguage.Core
             throw new InvalidOperationException($"Variable {variableName} needs to be declared first.");
         }
 
-        public override int VisitFuncCall(MeelanLanguageParser.FuncCallContext context)
+        public override double VisitFuncCall(MeelanLanguageParser.FuncCallContext context)
         {
             var functionName = context.ID().GetText();
             if (!Functions.ContainsKey(functionName))
@@ -227,16 +254,31 @@ namespace MeelanLanguage.Core
             return result;
         }
 
-        public override int VisitNumberOnly(MeelanLanguageParser.NumberOnlyContext context)
+        public override double VisitNumberOnly(MeelanLanguageParser.NumberOnlyContext context)
         {
-            var value = context.INT().GetText();
+            var value = context.DOUBLE().GetText();
 
-            return int.Parse(value);
+            return ConvertStringToDouble(value);
         }
 
-        public override int VisitBlock(MeelanLanguageParser.BlockContext context)
+        public override double VisitBlock(MeelanLanguageParser.BlockContext context)
         {
             return Visit(context.statements());
         }
+
+        public override double VisitIfRequiredElse(MeelanLanguageParser.IfRequiredElseContext context)
+        {
+            var expressionEqualsTrue = Math.Abs(Visit(context.expr(0)) - 1) < double.Epsilon;
+
+            return Visit(expressionEqualsTrue
+                ? context.expr(1)
+                : context.expr(2));
+        }
+
+        private static double ConvertStringToDouble(string value)
+        {
+            return double.Parse(value, CultureInfo.InvariantCulture);
+        }
+
     }
 }
