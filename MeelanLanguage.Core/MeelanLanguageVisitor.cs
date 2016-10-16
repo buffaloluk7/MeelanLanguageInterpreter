@@ -29,8 +29,13 @@ namespace MeelanLanguage.Core
         public override int VisitDeclaration(MeelanLanguageParser.DeclarationContext context)
         {
             var variableName = context.ID().GetText();
-            var variableValue = context.expr() == null ? 0 : Visit(context.expr());
 
+            if (Variables.ContainsKey(variableName))
+            {
+                throw new InvalidOperationException($"A variable {variableName} has already been declared.");
+            }
+
+            var variableValue = context.expr() == null ? 0 : Visit(context.expr());
             Variables.Add(variableName, variableValue);
 
             return variableValue;
