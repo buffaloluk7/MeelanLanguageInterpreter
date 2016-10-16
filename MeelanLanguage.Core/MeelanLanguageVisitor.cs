@@ -8,11 +8,13 @@ namespace MeelanLanguage.Core
     {
         public IDictionary<string, MeelanLanguageParser.FuncDefContext> Functions { get; }
         public IDictionary<string, int> Variables { get; }
+        public IDictionary<string, int> TemporaryVariables { get; }
 
         public MeelanLanguageVisitor()
         {
             Functions = new Dictionary<string, MeelanLanguageParser.FuncDefContext>();
             Variables = new Dictionary<string, int>();
+            TemporaryVariables = new Dictionary<string, int>();
         }
 
         public override int VisitPrint(MeelanLanguageParser.PrintContext context)
@@ -177,17 +179,47 @@ namespace MeelanLanguage.Core
         public override int VisitVariableOnly(MeelanLanguageParser.VariableOnlyContext context)
         {
             var variableName = context.ID().GetText();
-            if (!Variables.ContainsKey(variableName))
+            if (TemporaryVariables.ContainsKey(variableName))
             {
-                throw new InvalidOperationException($"Variable {variableName} needs to be declared first.");
+                return TemporaryVariables[variableName];
+            }
+            if (Variables.ContainsKey(variableName))
+            {
+                return Variables[variableName];
             }
 
-            return Variables[variableName];
+            throw new InvalidOperationException($"Variable {variableName} needs to be declared first.");
         }
 
         public override int VisitFuncCall(MeelanLanguageParser.FuncCallContext context)
         {
-            return base.VisitFuncCall(context);
+            var functionName = context.ID().GetText();
+            if (!Functions.ContainsKey(functionName))
+            {
+                throw new InvalidOperationException($"Function {functionName} needs to be declared first.");
+            }
+
+            var functionContext = Functions[functionName];
+            var argumentNames = functionContext.idlist().ID();
+            var argumentTerms = context.arglist().term();
+            if (argumentNames.Length != argumentTerms.Length)
+            {
+                throw new InvalidOperationException(
+                    $"Function needs {argumentNames.Length} arguments, but only {argumentTerms.Length} were provided.");
+            }
+
+            for (var i = 0; i < argumentNames.Length; i++)
+            {
+                var argumentName = argumentNames[i].GetText();
+                var argumentValue = Visit(argumentTerms[i]);
+                TemporaryVariables.Add(argumentName, argumentValue);
+            }
+            
+            var result = Visit(functionContext.statement());
+
+            TemporaryVariables.Clear();
+
+            return result;
         }
 
         public override int VisitNumberOnly(MeelanLanguageParser.NumberOnlyContext context)

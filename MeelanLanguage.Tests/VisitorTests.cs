@@ -237,7 +237,7 @@ namespace MeelanLanguage.Tests
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void ItShallThrowAnInvalidOperationExceptionWhenDeclaringAFunctionWithTwice()
+        public void ItShallThrowAnInvalidOperationExceptionWhenDeclaringAFunctionWithTheSameNameTwice()
         {
             // Given
             const string programCode = "funcdef calculate() { 4 + 2 }";
@@ -246,6 +246,73 @@ namespace MeelanLanguage.Tests
             // When
             _sut.Visit(statementsContext);
             _sut.Visit(statementsContext);
+
+            // Then
+            // throw an InvalidOperationException
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ItShallThrowAnInvalidOperationExceptionWhenCallingAnUndeclaredFunction()
+        {
+            // Given
+            const string programCode = "calculate() { 4 + 2 }";
+            var statementsContext = GivenAnStatementsContext(programCode);
+
+            // When
+            _sut.Visit(statementsContext);
+
+            // Then
+            // throw an InvalidOperationException
+        }
+
+        [TestMethod]
+        public void ItShallInterpretAFunctionCallWithoutArguments()
+        {
+            // Given
+            const string funcDefProgramCode = "funcdef theAnswerToLifeTheUniverseAndEverything() { 44 - 2 }";
+            var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
+            const string funcCallProgramCode = "theAnswerToLifeTheUniverseAndEverything()";
+            var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
+
+            // When
+            _sut.Visit(funcDefStatementsContext);
+            var result = _sut.Visit(funcCallStatementsContext);
+
+            // Then
+            Assert.AreEqual(42, result);
+        }
+
+        [TestMethod]
+        public void ItShallInterpretAFunctionCallWithTwoArguments()
+        {
+            // Given
+            const string funcDefProgramCode = "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
+            var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
+            const string funcCallProgramCode = "calculate(4, 5)";
+            var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
+
+            // When
+            _sut.Visit(funcDefStatementsContext);
+            var result = _sut.Visit(funcCallStatementsContext);
+
+            // Then
+            Assert.AreEqual(9, result);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ItShallThrowAnInvalidOperationExceptionWhenTooLittleFunctionArgumentsAreProvided()
+        {
+            // Given
+            const string funcDefProgramCode = "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
+            var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
+            const string funcCallProgramCode = "calculate(4)";
+            var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
+
+            // When
+            _sut.Visit(funcDefStatementsContext);
+            _sut.Visit(funcCallStatementsContext);
 
             // Then
             // throw an InvalidOperationException
