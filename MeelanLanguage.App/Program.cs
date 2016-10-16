@@ -5,14 +5,27 @@ namespace MeelanLanguage.App
 {
     internal class Program
     {
+        private static readonly MeelanLanguageInterpreter Interpreter = new MeelanLanguageInterpreter();
+
         private static void Main(string[] args)
         {
-            var programCode = Console.ReadLine();
+            Console.Write("Input: ");
 
-            var interpreter = new MeelanLanguageInterpreter();
-            var result = interpreter.InterpretProgramCodeFromString(programCode);
+            string programCode;
+            while ((programCode = Console.ReadLine()) != "exit")
+            {
+                try
+                {
+                    var result = Interpreter.InterpretProgramCodeFromString(programCode);
+                    Console.WriteLine($"Result: {result}");
+                }
+                catch (InvalidOperationException exception)
+                {
+                    Console.WriteLine($"\tError while interpreting the program code.\n\t{exception.Message}");
+                }
 
-            Console.WriteLine(result);
+                Console.Write("Input: ");
+            }
         }
     }
 }

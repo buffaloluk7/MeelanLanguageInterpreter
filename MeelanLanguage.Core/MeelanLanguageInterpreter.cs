@@ -9,11 +9,13 @@ namespace MeelanLanguage.Core
     // see: https://github.com/ckuhn203/Antlr4Calculator/ for a good math calculator implementation
     public class MeelanLanguageInterpreter
     {
+        private readonly MeelanLanguageVisitor _visitor = new MeelanLanguageVisitor();
+
         public int InterpretProgramCodeFromFilePath(string filePath)
         {
             var inputStream = new AntlrFileStream(filePath);
             var parser = SetupParser(inputStream);
-            var result = ParseProgram(parser);
+            var result = InterpretProgram(parser);
 
             return result;
         }
@@ -22,16 +24,15 @@ namespace MeelanLanguage.Core
         {
             var inputStream = new AntlrInputStream(programCode);
             var parser = SetupParser(inputStream);
-            var result = ParseProgram(parser);
+            var result = InterpretProgram(parser);
 
             return result;
         }
 
-        private static int ParseProgram(MeelanLanguageParser parser)
+        private int InterpretProgram(MeelanLanguageParser parser)
         {
             var statementsContext = parser.statements();
-            var visitor = new MeelanLanguageVisitor();
-            var result = visitor.Visit(statementsContext);
+            var result = _visitor.Visit(statementsContext);
 
             return result;
         }
