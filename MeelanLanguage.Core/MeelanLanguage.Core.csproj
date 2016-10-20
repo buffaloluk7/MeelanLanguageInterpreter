@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\CallStack.cs" />
+    <Compile Include="Entities\Scope.cs" />
     <Compile Include="Grammar\MeelanLanguage.g4.lexer.cs">
       <DependentUpon>MeelanLanguage.g4</DependentUpon>
     </Compile>
@@ -56,7 +58,7 @@
     <Compile Include="MeelanLanguageInterpreter.cs" />
     <Compile Include="MeelanLanguageVisitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ExceptionErrorListener.cs" />
+    <Compile Include="Entities\ExceptionErrorListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <Antlr4 Include="Grammar\MeelanLanguage.g4">

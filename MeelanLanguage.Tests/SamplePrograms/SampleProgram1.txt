@@ -1,0 +1,15 @@
+﻿var valueee
+{var value = 3}
+var value = 4
+
+funcdef doIt(value) {
+	var test
+	increase(value)
+}
+
+funcdef increase(value) {
+	var fest
+	value + 1
+}
+
+doIt(5)

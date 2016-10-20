@@ -22,7 +22,7 @@ statement	: 'print' expr										# Print
 			| 'for' ID 'in' DOUBLE '...' DOUBLE statement		# ForIn
 			| 'if' expr 'then' statement ('else' statement)?	# IfOptionalElse
 			| 'funcdef' ID '(' idlist ')' statement				# FuncDef
-			//| '{' statements '}'								# Block --> term contains this rule (expr --> cmp --> ... --> term)
+			//| '{' statements '}'								# BlockX //--> term contains this rule (expr --> cmp --> ... --> term)
 			| expr												# Expression;
 
 idlist		: (ID (',' ID)*)*;
@@ -41,8 +41,8 @@ unary		: '-' unary											# UnaryTerm
 			| term												# AtomicTerm;
 
 term		: '(' expr ')'										# TermInBraces
-			| ID												# VariableOnly
 			| ID '(' arglist ')'								# FuncCall
+			| ID												# VariableOnly
 			| DOUBLE											# NumberOnly
 			| '{' statements '}'								# Block
 			| 'if' expr 'then' expr 'else' expr					# IfRequiredElse;

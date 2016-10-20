@@ -1,0 +1,16 @@
+﻿var a = 0;
+
+funcdef test(b, c) {
+	funcdef inc(someValueToInc) { someValueToInc + 1 }
+	
+	var incValue = inc(c) + 1
+	var decValue = dec(b) - 1
+
+	incValue + decValue
+}
+
+funcdef dec(someValue) {
+	someValue - 1
+}
+
+test(1, 2)

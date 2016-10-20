@@ -1,27 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
+using MeelanLanguage.Core.Entities;
 using MeelanLanguage.Core.Grammar;
 
 namespace MeelanLanguage.Core
 {
     public class MeelanLanguageVisitor : MeelanLanguageBaseVisitor<double>
     {
+        private readonly CallStack<double> _callStack;
+
         public MeelanLanguageVisitor()
         {
-            Functions = new Dictionary<string, MeelanLanguageParser.FuncDefContext>();
-            Variables = new Dictionary<string, double>();
-            TemporaryVariables = new Dictionary<string, double>();
+            _callStack = new CallStack<double>();
         }
 
-        public IDictionary<string, MeelanLanguageParser.FuncDefContext> Functions { get; }
-        public IDictionary<string, double> Variables { get; }
-        public IDictionary<string, double> TemporaryVariables { get; }
+        public Scope<double> CurrentScope => _callStack.CurrentScope;
 
         public override double VisitPrint(MeelanLanguageParser.PrintContext context)
         {
             var value = Visit(context.expr());
-
             Console.WriteLine(value);
 
             return value;
@@ -30,14 +27,14 @@ namespace MeelanLanguage.Core
         public override double VisitDeclaration(MeelanLanguageParser.DeclarationContext context)
         {
             var variableName = context.ID().GetText();
-
-            if (Variables.ContainsKey(variableName))
+            if (_callStack.CurrentScope.HasVariableDeclared(variableName))
             {
-                throw new InvalidOperationException($"A variable {variableName} has already been declared.");
+                throw new InvalidOperationException(
+                    $"A variable {variableName} has already been declared in this scope.");
             }
 
             var variableValue = context.expr() == null ? 0 : Visit(context.expr());
-            Variables.Add(variableName, variableValue);
+            _callStack.CurrentScope.SetVariable(variableName, variableValue);
 
             return variableValue;
         }
@@ -45,13 +42,14 @@ namespace MeelanLanguage.Core
         public override double VisitAssignment(MeelanLanguageParser.AssignmentContext context)
         {
             var variableName = context.ID().GetText();
-            if (!Variables.ContainsKey(variableName))
+            var scopeContainingVariableDeclaration = _callStack.FindScopeForVariableName(variableName);
+            if (scopeContainingVariableDeclaration == null)
             {
                 throw new InvalidOperationException($"Variable {variableName} needs to be declared first.");
             }
 
             var variableValue = Visit(context.expr());
-            Variables[variableName] = variableValue;
+            scopeContainingVariableDeclaration.SetVariable(variableName, variableValue);
 
             return variableValue;
         }
@@ -69,23 +67,26 @@ namespace MeelanLanguage.Core
 
         public override double VisitForIn(MeelanLanguageParser.ForInContext context)
         {
+            _callStack.CreateScope();
+
             var variableName = context.ID().GetText();
-            if (TemporaryVariables.ContainsKey(variableName) || Variables.ContainsKey(variableName))
+            if (_callStack.CurrentScope.HasVariableDeclared(variableName))
             {
-                throw new InvalidOperationException($"Variable {variableName} has already been declared.");
+                throw new InvalidOperationException($"Variable {variableName} has already been declared in this scope.");
             }
 
             var fromValue = ConvertStringToDouble(context.DOUBLE(0).GetText());
             var toValue = ConvertStringToDouble(context.DOUBLE(1).GetText());
-
             var result = 0.0;
 
-            for (TemporaryVariables[variableName] = fromValue;
-                TemporaryVariables[variableName] <= toValue;
-                ++TemporaryVariables[variableName])
+
+            for (var i = fromValue; i <= toValue; ++i)
             {
+                _callStack.CurrentScope.SetVariable(variableName, i);
                 result = Visit(context.statement());
             }
+
+            _callStack.RemoveCurrentScope();
 
             return result;
         }
@@ -109,12 +110,13 @@ namespace MeelanLanguage.Core
         public override double VisitFuncDef(MeelanLanguageParser.FuncDefContext context)
         {
             var functionName = context.ID().GetText();
-            if (Functions.ContainsKey(functionName))
+            if (_callStack.CurrentScope.HasFunctionDeclared(functionName))
             {
-                throw new InvalidOperationException($"A function {functionName} has already been declared.");
+                throw new InvalidOperationException(
+                    $"A function {functionName} has already been declared in this scope.");
             }
 
-            Functions.Add(functionName, context);
+            _callStack.CurrentScope.SetFunction(functionName, context);
 
             return 0;
         }
@@ -211,27 +213,25 @@ namespace MeelanLanguage.Core
         public override double VisitVariableOnly(MeelanLanguageParser.VariableOnlyContext context)
         {
             var variableName = context.ID().GetText();
-            if (TemporaryVariables.ContainsKey(variableName))
+            var scopeContainingVariableDeclaration = _callStack.FindScopeForVariableName(variableName);
+            if (scopeContainingVariableDeclaration == null)
             {
-                return TemporaryVariables[variableName];
-            }
-            if (Variables.ContainsKey(variableName))
-            {
-                return Variables[variableName];
+                throw new InvalidOperationException($"Variable {variableName} needs to be declared first.");
             }
 
-            throw new InvalidOperationException($"Variable {variableName} needs to be declared first.");
+            return scopeContainingVariableDeclaration.GetVariable(variableName);
         }
 
         public override double VisitFuncCall(MeelanLanguageParser.FuncCallContext context)
         {
             var functionName = context.ID().GetText();
-            if (!Functions.ContainsKey(functionName))
+            var scopeContainingFunction = _callStack.FindScopeForFunctionName(functionName);
+            if (scopeContainingFunction == null)
             {
                 throw new InvalidOperationException($"Function {functionName} needs to be declared first.");
             }
 
-            var functionContext = Functions[functionName];
+            var functionContext = scopeContainingFunction.GetFunction(functionName);
             var argumentNames = functionContext.idlist().ID();
             var argumentTerms = context.arglist().term();
             if (argumentNames.Length != argumentTerms.Length)
@@ -240,16 +240,18 @@ namespace MeelanLanguage.Core
                     $"Function needs {argumentNames.Length} arguments, but only {argumentTerms.Length} were provided.");
             }
 
+            _callStack.CreateScope();
+
             for (var i = 0; i < argumentNames.Length; i++)
             {
                 var argumentName = argumentNames[i].GetText();
                 var argumentValue = Visit(argumentTerms[i]);
-                TemporaryVariables.Add(argumentName, argumentValue);
+                _callStack.CurrentScope.SetVariable(argumentName, argumentValue);
             }
 
             var result = Visit(functionContext.statement());
 
-            TemporaryVariables.Clear();
+            _callStack.RemoveCurrentScope();
 
             return result;
         }
@@ -263,7 +265,13 @@ namespace MeelanLanguage.Core
 
         public override double VisitBlock(MeelanLanguageParser.BlockContext context)
         {
-            return Visit(context.statements());
+            _callStack.CreateScope();
+
+            var value = Visit(context.statements());
+
+            _callStack.RemoveCurrentScope();
+
+            return value;
         }
 
         public override double VisitIfRequiredElse(MeelanLanguageParser.IfRequiredElseContext context)
@@ -279,6 +287,5 @@ namespace MeelanLanguage.Core
         {
             return double.Parse(value, CultureInfo.InvariantCulture);
         }
-
     }
 }

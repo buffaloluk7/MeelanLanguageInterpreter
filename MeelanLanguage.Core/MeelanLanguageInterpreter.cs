@@ -1,4 +1,5 @@
 ﻿using Antlr4.Runtime;
+using MeelanLanguage.Core.Entities;
 using MeelanLanguage.Core.Grammar;
 
 namespace MeelanLanguage.Core

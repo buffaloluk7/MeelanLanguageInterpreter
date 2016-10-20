@@ -1,7 +1,7 @@
 ﻿using System;
 using Antlr4.Runtime;
 
-namespace MeelanLanguage.Core
+namespace MeelanLanguage.Core.Entities
 {
     internal class ExceptionErrorListener : BaseErrorListener, IAntlrErrorListener<int>
     {

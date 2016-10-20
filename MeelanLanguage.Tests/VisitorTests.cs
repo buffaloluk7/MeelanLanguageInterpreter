@@ -22,7 +22,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "7";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -36,7 +36,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "3+ 4";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -50,7 +50,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "(12-15)";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -64,7 +64,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "-(-13-15)";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -78,7 +78,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "(14 - 12) < (12 + 3)";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -92,7 +92,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "if (4 < 5) then 9 + 2";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -106,7 +106,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "if (4 == 5) then 9 + 2 else 13";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -120,7 +120,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "if (3 % 2 == 0) then 9 + 2 else { if 7 + 2 == 9 then {1} else 2 }";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -134,30 +134,30 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string declarationProgramCode = "var i = 5";
-            var declarationStatementsContext = GivenAnStatementsContext(declarationProgramCode);
+            var declarationStatementsContext = GivenAStatementsContext(declarationProgramCode);
             const string whileProgramCode = "while i > 2 do i = i - 1";
-            var whileStatementsContext = GivenAnStatementsContext(whileProgramCode);
+            var whileStatementsContext = GivenAStatementsContext(whileProgramCode);
 
             // When
             _sut.Visit(declarationStatementsContext);
             _sut.Visit(whileStatementsContext);
 
             // Then
-            Assert.AreEqual(2, _sut.Variables["i"]);
+            Assert.AreEqual(2, _sut.CurrentScope.GetVariable("i"));
         }
 
         [TestMethod]
         public void ItShallInterpretAForInLoop()
         {
             // Given
-            const string programCode = "var sum = 0; for index in 1...10 { sum = sum + index }";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            const string programCode = "var sum = 0; var index = 1; for index in 1...10 { sum = sum + index }";
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             _sut.Visit(statementsContext);
 
             // Then
-            Assert.AreEqual(55, _sut.Variables["sum"]);
+            Assert.AreEqual(55, _sut.CurrentScope.GetVariable("sum"));
         }
 
         [TestMethod]
@@ -166,7 +166,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string assignmentProgramCode = "if i > 5 then 1";
-            var statementsContext = GivenAnStatementsContext(assignmentProgramCode);
+            var statementsContext = GivenAStatementsContext(assignmentProgramCode);
 
             // When
             _sut.Visit(statementsContext);
@@ -180,13 +180,13 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "var i";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             _sut.Visit(statementsContext);
 
             // Then
-            Assert.IsTrue(_sut.Variables.ContainsKey("i"));
+            Assert.IsTrue(_sut.CurrentScope.HasVariableDeclared("i"));
         }
 
         [TestMethod]
@@ -194,13 +194,13 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "var i2 = 5";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             _sut.Visit(statementsContext);
 
             // Then
-            Assert.AreEqual(5, _sut.Variables["i2"]);
+            Assert.AreEqual(5, _sut.CurrentScope.GetVariable("i2"));
         }
 
         [TestMethod]
@@ -208,16 +208,16 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string declarationProgramCode = "var i = 42";
-            var declarationStatementsContext = GivenAnStatementsContext(declarationProgramCode);
+            var declarationStatementsContext = GivenAStatementsContext(declarationProgramCode);
             const string assignmentProgramCode = "i = 24";
-            var assignmentStatementsContext = GivenAnStatementsContext(assignmentProgramCode);
+            var assignmentStatementsContext = GivenAStatementsContext(assignmentProgramCode);
 
             // When
             _sut.Visit(declarationStatementsContext);
             _sut.Visit(assignmentStatementsContext);
 
             // Then
-            Assert.AreEqual(24, _sut.Variables["i"]);
+            Assert.AreEqual(24, _sut.CurrentScope.GetVariable("i"));
         }
 
         [TestMethod]
@@ -226,7 +226,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string assignmentProgramCode = "i = 24";
-            var statementsContext = GivenAnStatementsContext(assignmentProgramCode);
+            var statementsContext = GivenAStatementsContext(assignmentProgramCode);
 
             // When
             _sut.Visit(statementsContext);
@@ -240,13 +240,13 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "funcdef calculate() { 4 + 2 }";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             _sut.Visit(statementsContext);
 
             // Then
-            Assert.IsTrue(_sut.Functions.ContainsKey("calculate"));
+            Assert.IsTrue(_sut.CurrentScope.HasFunctionDeclared("calculate"));
         }
 
         [TestMethod]
@@ -255,7 +255,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "funcdef calculate() { 4 + 2 }";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             _sut.Visit(statementsContext);
@@ -271,7 +271,7 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string programCode = "calculate() { 4 + 2 }";
-            var statementsContext = GivenAnStatementsContext(programCode);
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
             _sut.Visit(statementsContext);
@@ -285,9 +285,9 @@ namespace MeelanLanguage.Tests
         {
             // Given
             const string funcDefProgramCode = "funcdef theAnswerToLifeTheUniverseAndEverything() { 44 - 2 }";
-            var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
+            var funcDefStatementsContext = GivenAStatementsContext(funcDefProgramCode);
             const string funcCallProgramCode = "theAnswerToLifeTheUniverseAndEverything()";
-            var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
+            var funcCallStatementsContext = GivenAStatementsContext(funcCallProgramCode);
 
             // When
             _sut.Visit(funcDefStatementsContext);
@@ -303,9 +303,9 @@ namespace MeelanLanguage.Tests
             // Given
             const string funcDefProgramCode =
                 "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
-            var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
+            var funcDefStatementsContext = GivenAStatementsContext(funcDefProgramCode);
             const string funcCallProgramCode = "calculate(4, 5)";
-            var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
+            var funcCallStatementsContext = GivenAStatementsContext(funcCallProgramCode);
 
             // When
             _sut.Visit(funcDefStatementsContext);
@@ -322,9 +322,9 @@ namespace MeelanLanguage.Tests
             // Given
             const string funcDefProgramCode =
                 "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
-            var funcDefStatementsContext = GivenAnStatementsContext(funcDefProgramCode);
+            var funcDefStatementsContext = GivenAStatementsContext(funcDefProgramCode);
             const string funcCallProgramCode = "calculate(4)";
-            var funcCallStatementsContext = GivenAnStatementsContext(funcCallProgramCode);
+            var funcCallStatementsContext = GivenAStatementsContext(funcCallProgramCode);
 
             // When
             _sut.Visit(funcDefStatementsContext);
@@ -334,7 +334,7 @@ namespace MeelanLanguage.Tests
             // throw an InvalidOperationException
         }
 
-        public MeelanLanguageParser.StatementsContext GivenAnStatementsContext(string programCode)
+        public MeelanLanguageParser.StatementsContext GivenAStatementsContext(string programCode)
         {
             var inputStream = new AntlrInputStream(programCode);
             var lexer = new MeelanLanguageLexer(inputStream);
