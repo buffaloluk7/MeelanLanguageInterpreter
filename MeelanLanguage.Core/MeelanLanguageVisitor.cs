@@ -21,7 +21,6 @@ namespace MeelanLanguage.Core
         public override double VisitPrint(MeelanLanguageParser.PrintContext context)
         {
             var value = Visit(context.expr());
-
             Console.WriteLine(value);
 
             return value;
@@ -30,7 +29,6 @@ namespace MeelanLanguage.Core
         public override double VisitDeclaration(MeelanLanguageParser.DeclarationContext context)
         {
             var variableName = context.ID().GetText();
-
             if (Variables.ContainsKey(variableName))
             {
                 throw new InvalidOperationException($"A variable {variableName} has already been declared.");
@@ -174,7 +172,6 @@ namespace MeelanLanguage.Core
         public override double VisitProduct(MeelanLanguageParser.ProductContext context)
         {
             var leftValue = Visit(context.unary(0));
-
             if (context.unary().Length == 1)
             {
                 return leftValue;
