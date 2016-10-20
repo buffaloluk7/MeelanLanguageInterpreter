@@ -176,7 +176,6 @@ namespace MeelanLanguage.Core
         public override double VisitProduct(MeelanLanguageParser.ProductContext context)
         {
             var leftValue = Visit(context.unary(0));
-
             if (context.unary().Length == 1)
             {
                 return leftValue;
