@@ -13,7 +13,7 @@ options {
  * Parser Rules
  */
 
-statements	: (statement (';')?)*;
+statements	: (statement (';')*)*;
 
 statement	: 'print' expr										# Print
 			| 'var' ID ('=' expr)?								# Declaration
@@ -54,3 +54,5 @@ term		: '(' expr ')'										# TermInBraces
 ID			: [a-zA-Z][a-zA-Z0-9_]*;
 DOUBLE		: ([0-9]*[.])?[0-9]+;
 WS			: [ \t\r\n] -> channel(HIDDEN);
+COMMENT		: '/*' .*? '*/' -> skip;
+LINE_COMMENT: '//' ~[\r\n]* -> skip;

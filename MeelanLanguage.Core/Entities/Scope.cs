@@ -5,17 +5,17 @@ namespace MeelanLanguage.Core.Entities
 {
     public class Scope<T>
     {
-        public Scope(Scope<T> callingScope)
+        public Scope(Scope<T> parentScope, Scope<T> callingScope)
         {
+            ParentScope = parentScope;
             CallingScope = callingScope;
             Functions = new Dictionary<string, MeelanLanguageParser.FuncDefContext>();
             Variables = new Dictionary<string, T>();
         }
 
+        public Scope<T> ParentScope { get; }
         public Scope<T> CallingScope { get; }
-
         public IDictionary<string, MeelanLanguageParser.FuncDefContext> Functions { get; }
-
         public IDictionary<string, T> Variables { get; }
 
         public bool HasFunctionDeclared(string functionName)

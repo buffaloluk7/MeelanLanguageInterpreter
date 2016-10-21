@@ -298,21 +298,31 @@ namespace MeelanLanguage.Tests
         }
 
         [TestMethod]
-        public void ItShallInterpretAFunctionCallWithTwoArguments()
+        public void ItShallIgnoreInlineComments()
         {
             // Given
-            const string funcDefProgramCode =
-                "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
-            var funcDefStatementsContext = GivenAStatementsContext(funcDefProgramCode);
-            const string funcCallProgramCode = "calculate(4, 5)";
-            var funcCallStatementsContext = GivenAStatementsContext(funcCallProgramCode);
+            const string programCode = "var a = 42 // test";
+            var statementsContext = GivenAStatementsContext(programCode);
 
             // When
-            _sut.Visit(funcDefStatementsContext);
-            var result = _sut.Visit(funcCallStatementsContext);
+            var result = _sut.Visit(statementsContext);
 
             // Then
-            Assert.AreEqual(9, result);
+            Assert.AreEqual(42, result);
+        }
+
+        [TestMethod]
+        public void ItShallIgnoreMultilineComments()
+        {
+            // Given
+            const string programCode = "var /* test */ b = 42";
+            var statementsContext = GivenAStatementsContext(programCode);
+
+            // When
+            var result = _sut.Visit(statementsContext);
+
+            // Then
+            Assert.AreEqual(42, result);
         }
 
         [TestMethod]
@@ -332,6 +342,23 @@ namespace MeelanLanguage.Tests
 
             // Then
             // throw an InvalidOperationException
+        }
+
+        public void ItShallInterpretAFunctionCallWithTwoArguments()
+        {
+            // Given
+            const string funcDefProgramCode =
+                "funcdef calculate(leftOperand, rightOperand) { leftOperand + rightOperand }";
+            var funcDefStatementsContext = GivenAStatementsContext(funcDefProgramCode);
+            const string funcCallProgramCode = "calculate(4, 5)";
+            var funcCallStatementsContext = GivenAStatementsContext(funcCallProgramCode);
+
+            // When
+            _sut.Visit(funcDefStatementsContext);
+            var result = _sut.Visit(funcCallStatementsContext);
+
+            // Then
+            Assert.AreEqual(9, result);
         }
 
         public MeelanLanguageParser.StatementsContext GivenAStatementsContext(string programCode)

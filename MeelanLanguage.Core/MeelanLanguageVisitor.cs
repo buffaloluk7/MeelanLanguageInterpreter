@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using MeelanLanguage.Core.Entities;
 using MeelanLanguage.Core.Grammar;
@@ -59,7 +60,9 @@ namespace MeelanLanguage.Core
             var result = 0.0;
             while (Math.Abs(Visit(context.expr()) - 1) < double.Epsilon)
             {
+                _callStack.CreateScope();
                 result = Visit(context.statement());
+                _callStack.RemoveCurrentScope();
             }
 
             return result;
@@ -82,8 +85,12 @@ namespace MeelanLanguage.Core
 
             for (var i = fromValue; i <= toValue; ++i)
             {
+                _callStack.CreateScope();
+
                 _callStack.CurrentScope.SetVariable(variableName, i);
                 result = Visit(context.statement());
+
+                _callStack.RemoveCurrentScope();
             }
 
             _callStack.RemoveCurrentScope();
@@ -94,17 +101,23 @@ namespace MeelanLanguage.Core
         public override double VisitIfOptionalElse(MeelanLanguageParser.IfOptionalElseContext context)
         {
             var expressionEqualsTrue = Math.Abs(Visit(context.expr()) - 1) < double.Epsilon;
+            var result = 0.0;
+
             if (expressionEqualsTrue)
             {
-                return Visit(context.statement(0));
+                _callStack.CreateScope();
+                result = Visit(context.statement(0));
+                _callStack.RemoveCurrentScope();
             }
 
             if (context.statement().Length == 2)
             {
-                return Visit(context.statement(1));
+                _callStack.CreateScope();
+                result = Visit(context.statement(1));
+                _callStack.RemoveCurrentScope();
             }
 
-            return 0;
+            return result;
         }
 
         public override double VisitFuncDef(MeelanLanguageParser.FuncDefContext context)
@@ -239,13 +252,21 @@ namespace MeelanLanguage.Core
                     $"Function needs {argumentNames.Length} arguments, but only {argumentTerms.Length} were provided.");
             }
 
-            _callStack.CreateScope();
-
+            // Look for argument values in current scope before creating a new one
+            var arguments = new Dictionary<string, double>();
             for (var i = 0; i < argumentNames.Length; i++)
             {
                 var argumentName = argumentNames[i].GetText();
                 var argumentValue = Visit(argumentTerms[i]);
-                _callStack.CurrentScope.SetVariable(argumentName, argumentValue);
+                arguments.Add(argumentName, argumentValue);
+            }
+
+            // Add argument values to newly created scope
+            _callStack.CreateScope(scopeContainingFunction);
+
+            foreach (var argument in arguments)
+            {
+                _callStack.CurrentScope.SetVariable(argument.Key, argument.Value);
             }
 
             var result = Visit(functionContext.statement());
