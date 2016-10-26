@@ -65,6 +65,9 @@
     <Compile Include="VisitorTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="SamplePrograms\SampleProgram3.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
     <Content Include="SamplePrograms\SampleProgram1.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

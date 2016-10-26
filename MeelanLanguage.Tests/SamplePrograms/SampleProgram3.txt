@@ -1,0 +1,17 @@
+﻿funcdef increase(valueToIncrease) {
+	valueToIncrease + 1
+}
+
+funcdef add(currentValue, valueToAdd) {
+	var i = 1;
+	var value = currentValue;
+
+	while (i =< valueToAdd) == 1 do {
+		value = increase(value)
+		i = i + 1
+	}
+
+	value
+}
+
+var value = add(10, 32);

@@ -42,6 +42,19 @@ namespace MeelanLanguage.Tests
             Assert.AreEqual(3, result);
         }
 
+        [TestMethod]
+        public void ItShallInterpretAProgramCallingAFunctionRepeatingly()
+        {
+            // Given
+            var statementsContext = GivenAStatementsContext("SamplePrograms/SampleProgram3.txt");
+
+            // When
+            var result = _sut.Visit(statementsContext);
+
+            // Then
+            Assert.AreEqual(42, result);
+        }
+
         public MeelanLanguageParser.StatementsContext GivenAStatementsContext(string fileName)
         {
             var inputStream = new AntlrFileStream(fileName);
