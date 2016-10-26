@@ -1,19 +1,10 @@
 grammar MeelanLanguage;
 
-@header{
-	using System;
-	using System.Collections;
-}
-
-options {
-    language=CSharp3;
-}
-
 /*
  * Parser Rules
  */
 
-statements	: (statement (';')*)*;
+statements	: (statement (SEMICOLON)*)*;
 
 statement	: 'print' expr										# Print
 			| 'var' ID ('=' expr)?								# Declaration
@@ -22,7 +13,7 @@ statement	: 'print' expr										# Print
 			| 'for' ID 'in' DOUBLE '...' DOUBLE statement		# ForIn
 			| 'if' expr 'then' statement ('else' statement)?	# IfOptionalElse
 			| 'funcdef' ID '(' idlist ')' statement				# FuncDef
-			//| '{' statements '}'								# BlockX //--> term contains this rule (expr --> cmp --> ... --> term)
+			//| '{' statements '}'								# BlockX //--> term already contains this rule (expr --> cmp --> ... --> term)
 			| expr												# Expression;
 
 idlist		: (ID (',' ID)*)*;
@@ -56,3 +47,4 @@ DOUBLE		: ([0-9]*[.])?[0-9]+;
 WS			: [ \t\r\n] -> channel(HIDDEN);
 COMMENT		: '/*' .*? '*/' -> skip;
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
+SEMICOLON	: ';' -> skip;
