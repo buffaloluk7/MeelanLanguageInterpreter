@@ -1,6 +1,4 @@
-﻿using Antlr4.Runtime;
-using MeelanLanguage.Core;
-using MeelanLanguage.Core.Grammar;
+﻿using MeelanLanguage.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MeelanLanguage.Tests
@@ -20,7 +18,8 @@ namespace MeelanLanguage.Tests
         public void ItShallInterpretAProgramContainingAFunctionCallingAnotherFunction()
         {
             // Given
-            var statementsContext = GivenAStatementsContext("SamplePrograms/SampleProgram1.txt");
+            var statementsContext =
+                Utils.Given.GivenAStatementsContextForFileContent("SamplePrograms/SampleProgram1.txt");
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -33,7 +32,8 @@ namespace MeelanLanguage.Tests
         public void ItShallInterpretAProgramContainingFunctionDefinitionsInsideFunctionDefinitions()
         {
             // Given
-            var statementsContext = GivenAStatementsContext("SamplePrograms/SampleProgram2.txt");
+            var statementsContext =
+                Utils.Given.GivenAStatementsContextForFileContent("SamplePrograms/SampleProgram2.txt");
 
             // When
             var result = _sut.Visit(statementsContext);
@@ -43,26 +43,48 @@ namespace MeelanLanguage.Tests
         }
 
         [TestMethod]
-        public void ItShallInterpretAProgramCallingAFunctionRepeatingly()
+        public void ItShallInterpretAProgramCallingAFunctionRepeatinglyUsingWhileLoop()
         {
             // Given
-            var statementsContext = GivenAStatementsContext("SamplePrograms/SampleProgram3.txt");
+            var statementsContext =
+                Utils.Given.GivenAStatementsContextForFileContent("SamplePrograms/SampleProgram3.txt");
+            var callingStatementsContext = Utils.Given.GivenAStatementsContextForProgramCode("addUsingWhile(10, 32)");
 
-            // When
-            var result = _sut.Visit(statementsContext);
+            _sut.Visit(statementsContext);
+            var result = _sut.Visit(callingStatementsContext);
 
             // Then
             Assert.AreEqual(42, result);
         }
 
-        public MeelanLanguageParser.StatementsContext GivenAStatementsContext(string fileName)
+        [TestMethod]
+        public void ItShallInterpretAProgramCallingAFunctionRepeatinglyUsingForInLoop()
         {
-            var inputStream = new AntlrFileStream(fileName);
-            var lexer = new MeelanLanguageLexer(inputStream);
-            var tokenStream = new CommonTokenStream(lexer);
-            var parser = new MeelanLanguageParser(tokenStream);
+            // Given
+            var statementsContext =
+                Utils.Given.GivenAStatementsContextForFileContent("SamplePrograms/SampleProgram3.txt");
+            var callingStatementsContext = Utils.Given.GivenAStatementsContextForProgramCode("addUsingForIn(10, 32)");
 
-            return parser.statements();
+            _sut.Visit(statementsContext);
+            var result = _sut.Visit(callingStatementsContext);
+
+            // Then
+            Assert.AreEqual(42, result);
+        }
+
+        [TestMethod]
+        public void ItShallInterpretAProgramCallingAFunctionRepeatinglyUsingRecursion()
+        {
+            // Given
+            var statementsContext =
+                Utils.Given.GivenAStatementsContextForFileContent("SamplePrograms/SampleProgram3.txt");
+            var callingStatementsContext = Utils.Given.GivenAStatementsContextForProgramCode("addUsingRecursion(10, 32)");
+
+            _sut.Visit(statementsContext);
+            var result = _sut.Visit(callingStatementsContext);
+
+            // Then
+            Assert.AreEqual(42, result);
         }
     }
 }

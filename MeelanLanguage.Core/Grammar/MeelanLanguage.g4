@@ -10,7 +10,7 @@ statement	: 'print' expr										# Print
 			| 'var' ID ('=' expr)?								# Declaration
 			| ID '=' expr										# Assignment
 			| 'while' expr 'do' statement						# While
-			| 'for' ID 'in' DOUBLE '...' DOUBLE statement		# ForIn
+			| 'for' ID 'in' term '...' term statement			# ForIn
 			| 'if' expr 'then' statement ('else' statement)?	# IfOptionalElse
 			| 'funcdef' ID '(' idlist ')' statement				# FuncDef
 			//| '{' statements '}'								# BlockX //--> term already contains this rule (expr --> cmp --> ... --> term)
@@ -18,7 +18,7 @@ statement	: 'print' expr										# Print
 
 idlist		: (ID (',' ID)*)*;
 
-arglist		: (term (',' term)*)*;
+arglist		: (sum (',' sum)*)*;
 
 expr		: cmp;
 

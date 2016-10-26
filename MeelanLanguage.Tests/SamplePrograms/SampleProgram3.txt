@@ -2,7 +2,7 @@
 	valueToIncrease + 1
 }
 
-funcdef add(currentValue, valueToAdd) {
+funcdef addUsingWhile(currentValue, valueToAdd) {
 	var i = 1;
 	var value = currentValue;
 
@@ -14,4 +14,17 @@ funcdef add(currentValue, valueToAdd) {
 	value
 }
 
-var value = add(10, 32);
+funcdef addUsingForIn(currentValue, valueToAdd) {
+	var value = currentValue;
+
+	for i in 1...valueToAdd
+		value = increase(value)
+}
+
+funcdef addUsingRecursion(currentValue, valueToAdd) {
+	if valueToAdd == 0 then {
+		currentValue
+	} else {
+		addUsingRecursion(increase(currentValue), valueToAdd - 1)
+	}
+}

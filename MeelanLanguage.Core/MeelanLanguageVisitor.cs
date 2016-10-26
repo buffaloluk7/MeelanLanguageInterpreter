@@ -78,10 +78,9 @@ namespace MeelanLanguage.Core
                 throw new InvalidOperationException($"Variable {variableName} has already been declared in this scope.");
             }
 
-            var fromValue = ConvertStringToDouble(context.DOUBLE(0).GetText());
-            var toValue = ConvertStringToDouble(context.DOUBLE(1).GetText());
+            var fromValue = Visit(context.term(0));
+            var toValue = Visit(context.term(1));
             var result = 0.0;
-
 
             for (var i = fromValue; i <= toValue; ++i)
             {
@@ -110,7 +109,7 @@ namespace MeelanLanguage.Core
                 _callStack.RemoveCurrentScope();
             }
 
-            if (context.statement().Length == 2)
+            if (!expressionEqualsTrue && (context.statement().Length == 2))
             {
                 _callStack.CreateScope();
                 result = Visit(context.statement(1));
@@ -245,11 +244,11 @@ namespace MeelanLanguage.Core
 
             var functionContext = scopeContainingFunction.GetFunction(functionName);
             var argumentNames = functionContext.idlist().ID();
-            var argumentTerms = context.arglist().term();
-            if (argumentNames.Length != argumentTerms.Length)
+            var argumentValues = context.arglist().sum();
+            if (argumentNames.Length != argumentValues.Length)
             {
                 throw new InvalidOperationException(
-                    $"Function needs {argumentNames.Length} arguments, but only {argumentTerms.Length} were provided.");
+                    $"Function needs {argumentNames.Length} arguments, but only {argumentValues.Length} were provided.");
             }
 
             // Look for argument values in current scope before creating a new one
@@ -257,7 +256,7 @@ namespace MeelanLanguage.Core
             for (var i = 0; i < argumentNames.Length; i++)
             {
                 var argumentName = argumentNames[i].GetText();
-                var argumentValue = Visit(argumentTerms[i]);
+                var argumentValue = Visit(argumentValues[i]);
                 arguments.Add(argumentName, argumentValue);
             }
 
